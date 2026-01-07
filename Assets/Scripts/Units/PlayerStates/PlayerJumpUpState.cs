@@ -9,7 +9,7 @@ namespace GameArchitecture.Units.PlayerStates
     public class PlayerJumpUpState : AbstractState<PlayerStateType, PlayerStateMachine>
     {
         public PlayerJumpUpState(FSM<PlayerStateType> fsm, PlayerStateMachine target) : base(fsm, target) { }
-
+         
         protected override void OnEnter()
         {
             mOwner.PlayAnimation("jump");
@@ -19,6 +19,13 @@ namespace GameArchitecture.Units.PlayerStates
 
         protected override void OnUpdate()
         {
+            // 空中攻击检测（优先级最高）
+            if (mOwner.inputSystem.GetAttackKeyDown())
+            {
+                mFSM.ChangeState(PlayerStateType.JumpAttack);
+                return;
+            }
+
             // 切换到下落状态
             if (mOwner.rb != null && mOwner.rb.velocity.y < 0)
             {

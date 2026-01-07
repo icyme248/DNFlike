@@ -6,7 +6,7 @@ namespace GameArchitecture.Units.PlayerStates
     /// <summary>
     /// 空中下落攻击状态
     /// </summary>
-    public class PlayerJumpAttackState : AbstractState<PlayerStateType, PlayerStateMachine>
+    public class PlayerJumpAttackState : AbstractState<PlayerStateType, PlayerStateMachine>, IAnimationEventHandler
     {
         private float stateEnterTime;
         private const float MIN_STATE_DURATION = 1.0f; // 最小持续时间（保证动画完整性）
@@ -37,15 +37,33 @@ namespace GameArchitecture.Units.PlayerStates
         protected override void OnFixedUpdate()
         {
             mOwner.CheckGrounded();
+            
+            // 根据方向键控制水平移动（传入速度倍率）
+            Vector2 inputVector = mOwner.inputSystem.GetInputVector();
+            mOwner.AttackMove(inputVector.x, mOwner.jumpAttackMoveSpeedMultiplier);
         }
 
+        #region IAnimationEventHandler 实现
+
         /// <summary>
-        /// 动画事件：下落攻击结束
+        /// 处理动画事件（通用接口）
         /// </summary>
-        public void OnJumpAttackEnd()
+        public void HandleAnimationEvent(AnimationEventType eventType)
         {
-            mFSM.ChangeState(PlayerStateType.Idle);
+            switch (eventType)
+            {
+                case AnimationEventType.SkillEnd:
+                    // 技能结束
+                    mFSM.ChangeState(PlayerStateType.Idle);
+                    break;
+
+                default:
+                    Debug.LogWarning($"PlayerJumpAttackState: Unhandled animation event '{eventType}'");
+                    break;
+            }
         }
+
+        #endregion
     }
 }
 

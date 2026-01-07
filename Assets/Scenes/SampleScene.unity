@@ -448,7 +448,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8514397262420314916, guid: 2d365d61dbede3a4388ca7014ae96e42, type: 3}
       propertyPath: jumpAttackFallSpeed
-      value: 2
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 9022262010714187229, guid: 2d365d61dbede3a4388ca7014ae96e42, type: 3}
       propertyPath: m_LocalPosition.x

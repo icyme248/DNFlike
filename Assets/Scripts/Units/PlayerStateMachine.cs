@@ -79,46 +79,15 @@ namespace GameArchitecture.Units
         #region 动画事件回调
 
         /// <summary>
-        /// 动画事件：连招窗口期开启（转发到AttackState）
+        /// 通用动画事件处理：转发到当前状态
+        /// 各状态根据自己的需求处理不同的事件
         /// </summary>
-        public void OnComboWindowOpen()
+        /// <param name="eventType">事件类型</param>
+        public void OnAnimationEvent(PlayerStates.AnimationEventType eventType)
         {
-            if (fsm.CurrentState is PlayerAttackState attackState)
+            if (fsm?.CurrentState is PlayerStates.IAnimationEventHandler handler)
             {
-                attackState.OnComboWindowOpen();
-            }
-        }
-
-        /// <summary>
-        /// 动画事件：连招窗口期关闭（转发到AttackState）
-        /// </summary>
-        public void OnComboWindowClose()
-        {
-            if (fsm.CurrentState is PlayerAttackState attackState)
-            {
-                attackState.OnComboWindowClose();
-            }
-        }
-
-        /// <summary>
-        /// 动画事件：攻击动画结束（转发到AttackState）
-        /// </summary>
-        public void OnAttackAnimationEnd()
-        {
-            if (fsm.CurrentState is PlayerAttackState attackState)
-            {
-                attackState.OnAttackAnimationEnd();
-            }
-        }
-
-        /// <summary>
-        /// 动画事件：下落攻击结束（转发到JumpAttackState）
-        /// </summary>
-        public void OnJumpAttackEnd()
-        {
-            if (fsm.CurrentState is PlayerJumpAttackState jumpAttackState)
-            {
-                jumpAttackState.OnJumpAttackEnd();
+                handler.HandleAnimationEvent(eventType);
             }
         }
 

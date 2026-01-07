@@ -6,7 +6,7 @@ namespace GameArchitecture.Units.PlayerStates
     /// <summary>
     /// 攻击状态 - 支持三段连招
     /// </summary>
-    public class PlayerAttackState : AbstractState<PlayerStateType, PlayerStateMachine>
+    public class PlayerAttackState : AbstractState<PlayerStateType, PlayerStateMachine>, IAnimationEventHandler
     {
         private readonly string[] comboAnimations = { "Attack1", "Attack2", "Attack3" };
         
@@ -29,12 +29,23 @@ namespace GameArchitecture.Units.PlayerStates
 
         protected override void OnUpdate()
         {
-            // 窗口期内检测攻击输入（支持重新按下或长按）
-            if (comboWindowOpen && !comboInputBuffered)
+            // 窗口期内可以通过跳跃取消后摇
+            if (comboWindowOpen)
             {
-                if (mOwner.inputSystem.GetAttackKeyDown() || mOwner.inputSystem.IsAttackPressed())
+                // 优先检测跳跃输入（取消后摇）
+                if (mOwner.inputSystem.GetJumpKeyDown())
                 {
-                    comboInputBuffered = true;
+                    mFSM.ChangeState(PlayerStateType.JumpUp);
+                    return;
+                }
+
+                // 检测攻击输入（继续连招）
+                if (!comboInputBuffered)
+                {
+                    if (mOwner.inputSystem.GetAttackKeyDown() || mOwner.inputSystem.IsAttackPressed())
+                    {
+                        comboInputBuffered = true;
+                    }
                 }
             }
         }
@@ -46,21 +57,41 @@ namespace GameArchitecture.Units.PlayerStates
             mOwner.AttackMove(inputVector.x);
         }
 
-        #region 动画事件处理
+        #region IAnimationEventHandler 实现
 
         /// <summary>
-        /// 动画事件：连招窗口期开启
+        /// 处理动画事件（通用接口）
         /// </summary>
-        public void OnComboWindowOpen()
+        public void HandleAnimationEvent(AnimationEventType eventType)
         {
-            comboWindowOpen = true;
-            comboInputBuffered = false;
+            switch (eventType)
+            {
+                case AnimationEventType.WindowOpen:
+                    // 技能窗口期开启（可接受输入）
+                    comboWindowOpen = true;
+                    comboInputBuffered = false;
+                    break;
+
+                case AnimationEventType.WindowClose:
+                    // 技能窗口期关闭
+                    HandleWindowClose();
+                    break;
+
+                case AnimationEventType.SkillEnd:
+                    // 技能结束
+                    mFSM.ChangeState(PlayerStateType.Idle);
+                    break;
+
+                default:
+                    Debug.LogWarning($"PlayerAttackState: Unhandled animation event '{eventType}'");
+                    break;
+            }
         }
 
         /// <summary>
-        /// 动画事件：连招窗口期关闭
+        /// 处理窗口关闭逻辑
         /// </summary>
-        public void OnComboWindowClose()
+        private void HandleWindowClose()
         {
             comboWindowOpen = false;
 
@@ -75,14 +106,6 @@ namespace GameArchitecture.Units.PlayerStates
                 // 否则回到Idle
                 mFSM.ChangeState(PlayerStateType.Idle);
             }
-        }
-
-        /// <summary>
-        /// 动画事件：攻击动画结束（第三段攻击）
-        /// </summary>
-        public void OnAttackAnimationEnd()
-        {
-            mFSM.ChangeState(PlayerStateType.Idle);
         }
 
         #endregion

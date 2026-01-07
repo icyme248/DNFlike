@@ -22,6 +22,7 @@ namespace GameArchitecture.Units
 
         [Header("攻击参数")]
         public float attackMoveSpeed = 0.5f; // 攻击时的默认前进速度
+        public float jumpAttackMoveSpeedMultiplier = 5f; // 跳跃攻击时的横向速度倍率（相对地面攻击）
 
         [Header("跳跃参数")]
         public float jumpForce = 10f;
@@ -132,9 +133,11 @@ namespace GameArchitecture.Units
         }
 
         /// <summary>
-        /// 攻击时的移动
+        /// 攻击时的移动（支持地面和空中）
         /// </summary>
-        public void AttackMove(float inputX)
+        /// <param name="inputX">水平输入</param>
+        /// <param name="speedMultiplier">速度倍率（地面攻击=1.0，空中攻击可传入jumpAttackMoveSpeedMultiplier）</param>
+        public void AttackMove(float inputX, float speedMultiplier = 1f)
         {
             if (rb == null) return;
 
@@ -161,8 +164,12 @@ namespace GameArchitecture.Units
                 }
             }
 
-            // 应用移动
-            rb.velocity = new Vector3(facingDir * attackMoveSpeed * moveMultiplier, rb.velocity.y, 0);
+            // 应用移动（支持自定义速度倍率）
+            rb.velocity = new Vector3(
+                facingDir * attackMoveSpeed * speedMultiplier * moveMultiplier, 
+                rb.velocity.y, 
+                0
+            );
         }
 
         /// <summary>
